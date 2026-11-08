@@ -1,0 +1,2715 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f1e8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNmZmZkZjgiLz48cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHJ4PSI1IiBmaWxsPSIjYzQ1ZDNjIi8+PHJlY3QgeD0iMzQiIHk9IjgiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgcng9IjUiIGZpbGw9IiNiOTg0MmQiLz48cmVjdCB4PSI4IiB5PSIzNCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iNSIgZmlsbD0iIzhiODY3ZCIvPjxyZWN0IHg9IjM0IiB5PSIzNCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iNSIgZmlsbD0iIzQ2N2I2OCIvPjwvc3ZnPg==">
+  <meta name="description" content="用 DDL 和艾森豪威尔四象限整理你的计划。">
+  <title>四象限计划 · Quadrant Planner</title>
+  <style>
+/* =========================================================
+   四象限计划 · Quadrant Planner
+   ========================================================= */
+
+:root {
+  --bg: #f5f1e8;
+  --bg-deep: #eee8dc;
+  --surface: #fffdf8;
+  --surface-soft: #fbf7ef;
+  --surface-sunk: #f4efe5;
+  --ink: #232826;
+  --ink-soft: #4e504a;
+  --muted: #827d73;
+  --line: #e4dccf;
+  --line-strong: #d3c8b7;
+  --accent: #c45d3c;
+  --accent-deep: #a3482c;
+  --accent-soft: #fff0e9;
+  --q1: #c45d3c;
+  --q1-tint: #fff1e9;
+  --q1-ring: rgba(196, 93, 60, 0.14);
+  --q2: #b9842d;
+  --q2-tint: #fff8e5;
+  --q2-ring: rgba(185, 132, 45, 0.16);
+  --q3: #8b867d;
+  --q3-tint: #f2efe9;
+  --q3-ring: rgba(139, 134, 125, 0.16);
+  --q4: #467b68;
+  --q4-tint: #edf7f1;
+  --q4-ring: rgba(70, 123, 104, 0.16);
+  --shadow-sm: 0 1px 2px rgba(46, 38, 27, 0.04), 0 5px 16px rgba(46, 38, 27, 0.04);
+  --shadow-md: 0 12px 32px rgba(46, 38, 27, 0.08);
+  --shadow-lg: 0 26px 70px rgba(46, 38, 27, 0.11);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --font-serif: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC",
+    "STSong", "SimSun", serif;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 520px at 8% -12%, rgba(196, 93, 60, 0.1), transparent 62%),
+    radial-gradient(820px 520px at 102% 2%, rgba(70, 123, 104, 0.09), transparent 58%),
+    linear-gradient(180deg, #f7f3eb 0%, var(--bg) 55%, #f1ece3 100%);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(112, 102, 86, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(112, 102, 86, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 75%);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+svg {
+  display: block;
+}
+
+::selection {
+  color: #fff;
+  background: var(--accent);
+}
+
+/* ---------------------------------------------------------
+   Top bar
+   --------------------------------------------------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 14px clamp(18px, 4vw, 48px);
+  border-bottom: 1px solid rgba(211, 200, 183, 0.7);
+  background: rgba(247, 243, 235, 0.82);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+}
+
+.brand {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  width: 34px;
+  height: 34px;
+  padding: 5px;
+  border: 1px solid rgba(74, 66, 53, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 253, 248, 0.7);
+  box-shadow: 0 3px 10px rgba(46, 38, 27, 0.06);
+  transform: rotate(-2deg);
+}
+
+.brand-mark i {
+  display: block;
+  border-radius: 2px;
+  background: var(--q1);
+}
+
+.brand-mark i:nth-child(2) {
+  background: var(--q2);
+}
+
+.brand-mark i:nth-child(3) {
+  background: var(--q3);
+}
+
+.brand-mark i:nth-child(4) {
+  background: var(--q4);
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.brand-copy strong {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.brand-copy span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.view-switch {
+  justify-self: center;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(211, 200, 183, 0.8);
+  border-radius: 999px;
+  background: rgba(235, 228, 215, 0.78);
+  box-shadow: inset 0 1px 2px rgba(46, 38, 27, 0.04);
+}
+
+.view-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 105px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease),
+    box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.view-tab svg {
+  width: 17px;
+  height: 17px;
+  opacity: 0.75;
+}
+
+.view-tab:hover {
+  color: var(--ink);
+}
+
+.view-tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(46, 38, 27, 0.08);
+}
+
+.view-tab[aria-selected="true"] svg {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.view-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.add-button {
+  justify-self: end;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(196, 93, 60, 0.24);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.add-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.add-button:hover {
+  background: var(--accent-deep);
+  transform: translateY(-1px) rotate(90deg);
+  box-shadow: 0 9px 22px rgba(196, 93, 60, 0.3);
+}
+
+.add-button:active {
+  transform: translateY(0) rotate(90deg) scale(0.96);
+}
+
+.add-button:focus-visible {
+  outline: 3px solid rgba(196, 93, 60, 0.3);
+  outline-offset: 3px;
+}
+
+body[data-view="form"] .view-switch,
+body[data-view="form"] .add-button {
+  display: none;
+}
+
+body[data-view="form"] .topbar {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "brand";
+}
+
+/* ---------------------------------------------------------
+   Page shell
+   --------------------------------------------------------- */
+.page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(30px, 4.8vw, 58px) 0 56px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.heading-copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+.page-heading h1,
+.form-card h1 {
+  margin-bottom: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 4.2vw, 50px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.page-subtitle {
+  max-width: 540px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.summary-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.64);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.summary-chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--q4);
+  box-shadow: 0 0 0 4px rgba(70, 123, 104, 0.1);
+}
+
+.view-panel {
+  animation: rise 0.32s var(--ease) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------
+   DDL list
+   --------------------------------------------------------- */
+.ddl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(960px, 100%);
+  margin: 0 auto;
+}
+
+.ddl-item {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.date-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 92px;
+  padding: 12px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 248, 0.6);
+  box-shadow: var(--shadow-sm);
+}
+
+.date-month {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.date-day {
+  margin: 2px 0 1px;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.date-weekday {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.date-relative {
+  margin-top: 7px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ddl-item.is-overdue .date-rail {
+  border-color: rgba(179, 58, 43, 0.25);
+  background: #fff8f5;
+}
+
+.ddl-item.is-overdue .date-day,
+.ddl-item.is-overdue .date-relative {
+  color: #b33a2b;
+}
+
+.ddl-item.is-overdue .date-relative {
+  background: #fdece8;
+}
+
+/* ---------------------------------------------------------
+   Plan cards
+   --------------------------------------------------------- */
+.plan-card {
+  position: relative;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    transform 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.plan-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.plan-card.is-overdue {
+  border-color: rgba(179, 58, 43, 0.18);
+}
+
+.plan-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.plan-content:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.plan-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.plan-chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--muted);
+  transition: transform 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.plan-card.is-expanded .plan-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.plan-deadline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.plan-deadline svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #fdece8;
+  color: #b33a2b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.plan-expand {
+  display: none;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.plan-card.is-expanded .plan-expand {
+  display: flex;
+}
+
+.plan-card--matrix .plan-deadline {
+  display: none;
+}
+
+.plan-card--matrix.is-expanded .plan-deadline {
+  display: flex;
+}
+
+.edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), color 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+
+.edit-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.edit-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.edit-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   Empty state
+   --------------------------------------------------------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(620px, 100%);
+  min-height: 360px;
+  margin: 12px auto 0;
+  padding: 36px 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 253, 248, 0.46);
+  text-align: center;
+}
+
+.empty-art {
+  width: 92px;
+  height: 92px;
+  margin-bottom: 12px;
+}
+
+.empty-art svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-state h2 {
+  margin: 0 0 5px;
+  font-family: var(--font-serif);
+  font-size: 23px;
+  letter-spacing: 0.01em;
+}
+
+.empty-state p {
+  max-width: 330px;
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------
+   Matrix
+   --------------------------------------------------------- */
+.matrix-shell {
+  position: relative;
+  height: clamp(560px, calc(100vh - 250px), 740px);
+  padding: 40px;
+}
+
+.matrix-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+}
+
+.quadrant {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--q-color);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, var(--q-tint) 0%, rgba(255, 253, 248, 0.94) 44%),
+    var(--surface);
+  box-shadow: 0 1px 1px rgba(46, 38, 27, 0.03);
+}
+
+.quadrant--q1 {
+  --q-color: var(--q1);
+  --q-tint: var(--q1-tint);
+}
+
+.quadrant--q2 {
+  --q-color: var(--q2);
+  --q-tint: var(--q2-tint);
+}
+
+.quadrant--q3 {
+  --q-color: var(--q3);
+  --q-tint: var(--q3-tint);
+}
+
+.quadrant--q4 {
+  --q-color: var(--q4);
+  --q-tint: var(--q4-tint);
+}
+
+.quadrant--q2 {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.quadrant--q1 {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.quadrant--q3 {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.quadrant--q4 {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.quadrant-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 15px 0;
+}
+
+.quadrant-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.quadrant-code {
+  color: var(--q-color);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.quadrant-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.quadrant-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.7);
+  color: var(--q-color);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.quadrant-hint {
+  margin: 3px 15px 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.quadrant-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 10px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.quadrant-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.quadrant-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.quadrant-empty {
+  position: absolute;
+  right: 15px;
+  bottom: 13px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.plan-card--matrix {
+  flex: 0 0 auto;
+  padding: 10px 11px;
+  border-radius: 11px;
+  box-shadow: none;
+  background: rgba(255, 253, 248, 0.82);
+}
+
+.plan-card--matrix:hover {
+  background: var(--surface);
+  transform: none;
+}
+
+.plan-card--matrix .plan-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.plan-card--matrix .plan-chevron {
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+
+.plan-card--matrix .plan-deadline {
+  margin-top: 7px;
+  font-size: 10.5px;
+}
+
+.plan-card--matrix .plan-expand {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.plan-card--matrix .edit-button {
+  min-height: 27px;
+  font-size: 10px;
+}
+
+/* axis */
+.matrix-axis {
+  position: absolute;
+  z-index: 0;
+  background: #c9bfaf;
+  pointer-events: none;
+}
+
+.matrix-axis--x {
+  top: 50%;
+  left: 40px;
+  right: 40px;
+  height: 1px;
+}
+
+.matrix-axis--x::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  right: -1px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 8px solid #948a7a;
+}
+
+.matrix-axis--y {
+  top: 40px;
+  bottom: 40px;
+  left: 50%;
+  width: 1px;
+}
+
+.matrix-axis--y::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -4px;
+  width: 0;
+  height: 0;
+  border-right: 4px solid transparent;
+  border-bottom: 8px solid #948a7a;
+  border-left: 4px solid transparent;
+}
+
+.axis-label {
+  position: absolute;
+  z-index: 3;
+  color: #8c8273;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.axis-label--x-right {
+  top: calc(50% - 25px);
+  right: 8px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.axis-label--x-left {
+  top: calc(50% + 8px);
+  left: 9px;
+}
+
+.axis-label--y-top {
+  top: 9px;
+  left: calc(50% + 9px);
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.axis-label--y-bottom {
+  bottom: 9px;
+  left: calc(50% + 9px);
+}
+
+.matrix-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.matrix-empty > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 250px;
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 248, 0.9);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+
+.matrix-empty strong {
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+
+.matrix-empty span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.text-button {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------------------------------------------------------
+   Form
+   --------------------------------------------------------- */
+.form-view {
+  width: min(740px, 100%);
+  margin: 0 auto;
+  padding-bottom: 96px;
+  animation: fadeIn 0.24s var(--ease) both;
+}
+
+body[data-view="form"] .page {
+  padding-bottom: 110px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+
+.back-link svg {
+  width: 17px;
+  height: 17px;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.form-card {
+  padding: clamp(26px, 5vw, 46px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.form-card h1 {
+  margin-bottom: 8px;
+  font-size: clamp(32px, 4.5vw, 44px);
+}
+
+.form-subtitle {
+  margin-bottom: 30px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field > label,
+.field-label-row label,
+.quadrant-field legend {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.char-count {
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.field textarea,
+.field input[type="datetime-local"] {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    background 0.2s var(--ease);
+}
+
+.field textarea {
+  min-height: 88px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.field input[type="datetime-local"] {
+  height: 46px;
+  padding: 0 12px;
+}
+
+.field textarea::placeholder {
+  color: #aaa294;
+}
+
+.field textarea:focus,
+.field input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--q4);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(70, 123, 104, 0.12);
+}
+
+.field.has-error textarea,
+.field.has-error input[type="datetime-local"] {
+  border-color: #b33a2b;
+  box-shadow: 0 0 0 4px rgba(179, 58, 43, 0.08);
+}
+
+.field-error {
+  display: block;
+  min-height: 16px;
+  margin-top: 5px;
+  color: #b33a2b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.quadrant-field {
+  margin-bottom: 20px;
+}
+
+.quadrant-field legend {
+  margin-bottom: 8px;
+}
+
+.quadrant-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.quadrant-option {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.quadrant-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.option-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 78px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--q-color);
+  border-radius: 13px;
+  background: var(--surface-soft);
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease),
+    box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.option-q1 {
+  --q-color: var(--q1);
+  --q-tint: var(--q1-tint);
+  --q-ring: var(--q1-ring);
+}
+
+.option-q2 {
+  --q-color: var(--q2);
+  --q-tint: var(--q2-tint);
+  --q-ring: var(--q2-ring);
+}
+
+.option-q3 {
+  --q-color: var(--q3);
+  --q-tint: var(--q3-tint);
+  --q-ring: var(--q3-ring);
+}
+
+.option-q4 {
+  --q-color: var(--q4);
+  --q-tint: var(--q4-tint);
+  --q-ring: var(--q4-ring);
+}
+
+.option-card .option-code {
+  color: var(--q-color);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.option-card strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.option-card small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.quadrant-option:hover .option-card {
+  border-color: var(--q-color);
+  background: var(--q-tint);
+  transform: translateY(-1px);
+}
+
+.quadrant-option input:checked + .option-card {
+  border-color: var(--q-color);
+  background: var(--q-tint);
+  box-shadow: 0 0 0 3px var(--q-ring);
+}
+
+.quadrant-option input:focus-visible + .option-card {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.quadrant-field.has-error .option-card {
+  border-color: rgba(179, 58, 43, 0.55);
+}
+
+.form-actions {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: min(680px, calc(100% - 32px));
+  margin: 0;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: 0 18px 46px rgba(46, 38, 27, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateX(-50%);
+}
+
+.form-actions .button--ghost {
+  min-width: 88px;
+  background: transparent;
+}
+
+.form-actions .button--primary {
+  min-width: 140px;
+}
+
+body[data-view="form"] .toast {
+  bottom: 92px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease),
+    border-color 0.2s var(--ease), transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.button--primary {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(35, 40, 38, 0.14);
+}
+
+.button--primary:hover {
+  background: #101412;
+  transform: translateY(-1px);
+  box-shadow: 0 9px 22px rgba(35, 40, 38, 0.18);
+}
+
+.button--primary:active {
+  transform: translateY(0);
+}
+
+.button--ghost {
+  border-color: var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.button--ghost:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-soft);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.delete-button {
+  display: block;
+  margin: 18px auto 0;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #b33a2b;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.delete-button:focus-visible {
+  outline: 2px solid #b33a2b;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------
+   Footer & toast
+   --------------------------------------------------------- */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px 30px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.footer-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 100;
+  max-width: calc(100% - 32px);
+  padding: 10px 17px;
+  border: 1px solid rgba(35, 40, 38, 0.08);
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: 0 12px 30px rgba(35, 40, 38, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+@media (max-width: 900px) {
+  .page {
+    width: calc(100% - 32px);
+  }
+
+  .matrix-shell {
+    height: clamp(560px, calc(100vh - 230px), 700px);
+    padding: 34px;
+  }
+
+  .matrix-axis--x {
+    left: 34px;
+    right: 34px;
+  }
+
+  .matrix-axis--y {
+    top: 34px;
+    bottom: 34px;
+  }
+
+  .axis-label--x-right {
+    right: 4px;
+  }
+
+  .axis-label--y-top {
+    top: 5px;
+  }
+
+  .axis-label--y-bottom {
+    bottom: 5px;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand add"
+      "switch switch";
+    gap: 10px 14px;
+    padding: 12px 18px 11px;
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .brand-mark {
+    width: 31px;
+    height: 31px;
+  }
+
+  .brand-copy strong {
+    font-size: 16px;
+  }
+
+  .add-button {
+    grid-area: add;
+    width: 40px;
+    height: 40px;
+  }
+
+  .view-switch {
+    grid-area: switch;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .view-tab {
+    min-height: 34px;
+  }
+
+  body[data-view="form"] .topbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "brand";
+  }
+
+  .page {
+    width: calc(100% - 24px);
+    padding-top: 26px;
+    padding-bottom: 40px;
+  }
+
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .page-heading h1 {
+    font-size: 35px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .summary-chip {
+    min-height: 32px;
+    font-size: 11px;
+  }
+
+  .ddl-list {
+    gap: 10px;
+  }
+
+  .ddl-item {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .date-rail {
+    min-height: 84px;
+    padding: 9px 4px;
+    border-radius: 12px;
+  }
+
+  .date-month {
+    font-size: 9px;
+  }
+
+  .date-day {
+    font-size: 26px;
+  }
+
+  .date-weekday {
+    font-size: 10px;
+  }
+
+  .date-relative {
+    padding: 2px 6px;
+    font-size: 8px;
+  }
+
+  .plan-card {
+    padding: 13px 14px;
+    border-radius: 13px;
+  }
+
+  .plan-text {
+    font-size: 14px;
+  }
+
+  .plan-deadline {
+    font-size: 11px;
+  }
+
+  .empty-state {
+    min-height: 330px;
+    padding: 30px 18px;
+  }
+
+  .matrix-shell {
+    height: 640px;
+    padding: 28px 44px 28px 28px;
+  }
+
+  .matrix-grid {
+    gap: 10px;
+  }
+
+  .matrix-axis--x {
+    left: 28px;
+    right: 44px;
+  }
+
+  .matrix-axis--y {
+    top: 28px;
+    bottom: 28px;
+  }
+
+  .quadrant {
+    border-radius: 12px;
+  }
+
+  .quadrant-header {
+    padding: 10px 10px 0;
+    gap: 6px;
+  }
+
+  .quadrant-title {
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .quadrant-header h2 {
+    font-size: 12px;
+  }
+
+  .quadrant-code {
+    font-size: 8px;
+  }
+
+  .quadrant-count {
+    min-width: 19px;
+    height: 19px;
+    font-size: 9px;
+  }
+
+  .quadrant-hint {
+    margin: 2px 10px 7px;
+    font-size: 9px;
+  }
+
+  .quadrant-list {
+    gap: 6px;
+    padding: 0 7px 9px;
+  }
+
+  .plan-card--matrix {
+    padding: 8px 9px;
+    border-radius: 9px;
+  }
+
+  .plan-card--matrix .plan-text {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .plan-card--matrix .plan-deadline {
+    font-size: 9.5px;
+  }
+
+  .plan-card--matrix .edit-button {
+    min-height: 25px;
+    padding: 0 9px;
+    font-size: 9px;
+  }
+
+  .axis-label {
+    font-size: 9px;
+  }
+
+  .axis-label--x-right,
+  .axis-label--y-top {
+    font-size: 12px;
+  }
+
+  .axis-label--x-right {
+    top: calc(50% - 23px);
+    right: 8px;
+  }
+
+  .axis-label--x-left,
+  .axis-label--y-bottom {
+    display: none;
+  }
+
+  .axis-label--y-top {
+    top: 3px;
+    left: calc(50% + 7px);
+  }
+
+  .matrix-empty > div {
+    padding: 18px 20px;
+  }
+
+  .form-card {
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .form-card h1 {
+    font-size: 33px;
+  }
+
+  .form-subtitle {
+    margin-bottom: 24px;
+  }
+
+  .quadrant-options {
+    gap: 8px;
+  }
+
+  .option-card {
+    min-height: 76px;
+    padding: 11px 12px;
+  }
+
+  .option-card strong {
+    font-size: 13px;
+  }
+
+  .form-actions {
+    bottom: 12px;
+    width: calc(100% - 24px);
+    padding: 7px;
+    justify-content: stretch;
+  }
+
+  .form-actions .button {
+    flex: 1;
+  }
+
+  body[data-view="form"] .toast {
+    bottom: 84px;
+  }
+
+  .app-footer {
+    flex-wrap: wrap;
+    padding-bottom: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-copy span {
+    display: none;
+  }
+
+  .matrix-shell {
+    height: 670px;
+    padding: 24px 40px 24px 24px;
+  }
+
+  .matrix-grid {
+    gap: 8px;
+  }
+
+  .matrix-axis--x {
+    left: 24px;
+    right: 40px;
+  }
+
+  .matrix-axis--y {
+    top: 24px;
+    bottom: 24px;
+  }
+
+  .quadrant-header {
+    padding: 9px 8px 0;
+  }
+
+  .quadrant-title {
+    gap: 1px;
+  }
+
+  .quadrant-header h2 {
+    font-size: 11px;
+  }
+
+  .quadrant-hint {
+    display: none;
+  }
+
+  .quadrant-list {
+    padding: 0 5px 7px;
+  }
+
+  .plan-card--matrix {
+    padding: 7px 8px;
+  }
+
+  .plan-card--matrix .plan-text {
+    font-size: 11.5px;
+  }
+
+  .plan-card--matrix .plan-chevron {
+    width: 13px;
+    height: 13px;
+  }
+
+  .axis-label--x-left,
+  .axis-label--y-bottom {
+    display: none;
+  }
+
+  .form-card {
+    padding: 21px 14px;
+  }
+
+  .option-card {
+    min-height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-view="home">
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="四象限计划首页">
+      <span class="brand-mark" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+      </span>
+      <span class="brand-copy">
+        <strong>四象限计划</strong>
+        <span>Quadrant Planner</span>
+      </span>
+    </a>
+
+    <div class="view-switch" id="viewSwitch" role="tablist" aria-label="计划视图">
+      <button class="view-tab" type="button" role="tab" data-view="ddl" aria-selected="true">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 5h12M4 10h12M4 15h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span>DDL</span>
+      </button>
+      <button class="view-tab" type="button" role="tab" data-view="matrix" aria-selected="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <rect x="3" y="3" width="6" height="6" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="11" y="3" width="6" height="6" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="3" y="11" width="6" height="6" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <rect x="11" y="11" width="6" height="6" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <span>四象限</span>
+      </button>
+    </div>
+
+    <button class="add-button" id="addButton" type="button" aria-label="添加计划">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="page">
+    <section id="homeView" aria-labelledby="pageTitle">
+      <div class="page-heading">
+        <div class="heading-copy">
+          <p class="eyebrow" id="eyebrow">DEADLINE FIRST</p>
+          <h1 id="pageTitle">按截止时间</h1>
+          <p class="page-subtitle" id="pageSubtitle">从最近的截止日期开始，先处理眼前的事。</p>
+        </div>
+        <div class="summary-chip" id="summaryChip">共 0 项</div>
+      </div>
+
+      <section id="ddlView" class="view-panel" aria-label="按截止时间排序的计划">
+        <div class="ddl-list" id="ddlList"></div>
+        <div class="empty-state" id="ddlEmpty" hidden>
+          <div class="empty-art" aria-hidden="true">
+            <svg viewBox="0 0 96 96">
+              <rect x="18" y="22" width="60" height="58" rx="10" fill="#fffaf2" stroke="#d8cfc0" stroke-width="2"/>
+              <path d="M18 38h60" stroke="#d8cfc0" stroke-width="2"/>
+              <path d="M32 15v14M64 15v14" stroke="#c45d3c" stroke-width="3" stroke-linecap="round"/>
+              <path d="M32 52h20M32 64h30" stroke="#c9c0b1" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="72" cy="70" r="12" fill="#c45d3c"/>
+              <path d="M72 64v12M66 70h12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>还没有计划</h2>
+          <p>把第一件要做的事写下来，从一个截止时间开始。</p>
+          <button class="button button--primary" type="button" data-action="add">添加第一个计划</button>
+        </div>
+      </section>
+
+      <section id="matrixView" class="view-panel" aria-label="艾森豪威尔四象限" hidden>
+        <div class="matrix-shell">
+          <div class="matrix-grid">
+            <article class="quadrant quadrant--q2" data-quadrant="urgent-not-important">
+              <header class="quadrant-header">
+                <div class="quadrant-title">
+                  <span class="quadrant-code">Q2</span>
+                  <h2>很急不重</h2>
+                </div>
+                <span class="quadrant-count" data-count>0</span>
+              </header>
+              <p class="quadrant-hint">尽快处理 / 委托</p>
+              <div class="quadrant-list" data-list="urgent-not-important"></div>
+              <p class="quadrant-empty">暂无计划</p>
+            </article>
+
+            <article class="quadrant quadrant--q1" data-quadrant="urgent-important">
+              <header class="quadrant-header">
+                <div class="quadrant-title">
+                  <span class="quadrant-code">Q1</span>
+                  <h2>很急很重</h2>
+                </div>
+                <span class="quadrant-count" data-count>0</span>
+              </header>
+              <p class="quadrant-hint">马上做</p>
+              <div class="quadrant-list" data-list="urgent-important"></div>
+              <p class="quadrant-empty">暂无计划</p>
+            </article>
+
+            <article class="quadrant quadrant--q3" data-quadrant="not-urgent-not-important">
+              <header class="quadrant-header">
+                <div class="quadrant-title">
+                  <span class="quadrant-code">Q3</span>
+                  <h2>不急不重</h2>
+                </div>
+                <span class="quadrant-count" data-count>0</span>
+              </header>
+              <p class="quadrant-hint">有空再做</p>
+              <div class="quadrant-list" data-list="not-urgent-not-important"></div>
+              <p class="quadrant-empty">暂无计划</p>
+            </article>
+
+            <article class="quadrant quadrant--q4" data-quadrant="not-urgent-important">
+              <header class="quadrant-header">
+                <div class="quadrant-title">
+                  <span class="quadrant-code">Q4</span>
+                  <h2>不急很重</h2>
+                </div>
+                <span class="quadrant-count" data-count>0</span>
+              </header>
+              <p class="quadrant-hint">计划推进</p>
+              <div class="quadrant-list" data-list="not-urgent-important"></div>
+              <p class="quadrant-empty">暂无计划</p>
+            </article>
+          </div>
+
+          <div class="matrix-axis matrix-axis--x" aria-hidden="true"></div>
+          <div class="matrix-axis matrix-axis--y" aria-hidden="true"></div>
+          <span class="axis-label axis-label--x-right" aria-hidden="true">重</span>
+          <span class="axis-label axis-label--x-left" aria-hidden="true">不重</span>
+          <span class="axis-label axis-label--y-top" aria-hidden="true">急</span>
+          <span class="axis-label axis-label--y-bottom" aria-hidden="true">不急</span>
+
+          <div class="matrix-empty" id="matrixEmpty" hidden>
+            <div>
+              <strong>矩阵还是空的</strong>
+              <span>添加计划后，它会自动落到对应的象限。</span>
+              <button class="text-button" type="button" data-action="add">添加计划 +</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="formView" class="form-view" aria-labelledby="formTitle" hidden>
+      <a class="back-link" href="#/">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        返回计划
+      </a>
+
+      <div class="form-card">
+        <p class="eyebrow" id="formEyebrow">NEW PLAN</p>
+        <h1 id="formTitle">添加计划</h1>
+        <p class="form-subtitle" id="formSubtitle">把要做的事，放进合适的位置。</p>
+
+        <form id="planForm" novalidate>
+          <div class="field" id="contentField">
+            <div class="field-label-row">
+              <label for="contentInput">计划内容</label>
+              <span class="char-count" id="charCount">0 / 120</span>
+            </div>
+            <textarea id="contentInput" name="content" rows="3" maxlength="120"
+              placeholder="例如：完成大学物理实验报告" aria-describedby="contentError"></textarea>
+            <span class="field-error" id="contentError"></span>
+          </div>
+
+          <div class="field" id="deadlineField">
+            <label for="deadlineInput">截止时间</label>
+            <input type="datetime-local" id="deadlineInput" name="deadline" aria-describedby="deadlineError">
+            <span class="field-error" id="deadlineError"></span>
+          </div>
+
+          <fieldset class="field quadrant-field" id="quadrantField">
+            <legend>紧急 / 重要程度</legend>
+            <div class="quadrant-options">
+              <label class="quadrant-option option-q2">
+                <input type="radio" name="quadrant" value="urgent-not-important">
+                <span class="option-card">
+                  <span class="option-code">Q2</span>
+                  <strong>很急不重</strong>
+                  <small>尽快处理 / 委托</small>
+                </span>
+              </label>
+              <label class="quadrant-option option-q1">
+                <input type="radio" name="quadrant" value="urgent-important">
+                <span class="option-card">
+                  <span class="option-code">Q1</span>
+                  <strong>很急很重</strong>
+                  <small>马上做</small>
+                </span>
+              </label>
+              <label class="quadrant-option option-q3">
+                <input type="radio" name="quadrant" value="not-urgent-not-important">
+                <span class="option-card">
+                  <span class="option-code">Q3</span>
+                  <strong>不急不重</strong>
+                  <small>有空再做</small>
+                </span>
+              </label>
+              <label class="quadrant-option option-q4">
+                <input type="radio" name="quadrant" value="not-urgent-important">
+                <span class="option-card">
+                  <span class="option-code">Q4</span>
+                  <strong>不急很重</strong>
+                  <small>计划推进</small>
+                </span>
+              </label>
+            </div>
+            <span class="field-error" id="quadrantError"></span>
+          </fieldset>
+
+          <div class="form-actions">
+            <a class="button button--ghost" href="#/">取消</a>
+            <button class="button button--primary" type="submit" id="submitButton">完成</button>
+          </div>
+
+          <button class="delete-button" type="button" id="deleteButton" hidden>删除这个计划</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>本地保存 · 无需登录</span>
+    <span class="footer-dot" aria-hidden="true"></span>
+    <span>先做重要的，再做紧急的</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+(() => {
+  "use strict";
+
+  /* -------------------------------------------------------
+     Constants
+     ------------------------------------------------------- */
+  const STORAGE_KEY = "quadrant-planner-v1";
+  const QUADRANT_KEYS = [
+    "urgent-important",
+    "urgent-not-important",
+    "not-urgent-important",
+    "not-urgent-not-important",
+  ];
+  const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+  /* -------------------------------------------------------
+     DOM
+     ------------------------------------------------------- */
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const els = {
+    body: document.body,
+    viewSwitch: $("#viewSwitch"),
+    viewTabs: $$(".view-tab"),
+    addButton: $("#addButton"),
+    homeView: $("#homeView"),
+    formView: $("#formView"),
+    ddlView: $("#ddlView"),
+    matrixView: $("#matrixView"),
+    ddlList: $("#ddlList"),
+    ddlEmpty: $("#ddlEmpty"),
+    matrixEmpty: $("#matrixEmpty"),
+    eyebrow: $("#eyebrow"),
+    pageTitle: $("#pageTitle"),
+    pageSubtitle: $("#pageSubtitle"),
+    summaryChip: $("#summaryChip"),
+    form: $("#planForm"),
+    contentField: $("#contentField"),
+    contentInput: $("#contentInput"),
+    contentError: $("#contentError"),
+    deadlineField: $("#deadlineField"),
+    deadlineInput: $("#deadlineInput"),
+    deadlineError: $("#deadlineError"),
+    quadrantField: $("#quadrantField"),
+    quadrantError: $("#quadrantError"),
+    charCount: $("#charCount"),
+    formEyebrow: $("#formEyebrow"),
+    formTitle: $("#formTitle"),
+    formSubtitle: $("#formSubtitle"),
+    submitButton: $("#submitButton"),
+    deleteButton: $("#deleteButton"),
+    toast: $("#toast"),
+  };
+
+  /* -------------------------------------------------------
+     State & storage
+     ------------------------------------------------------- */
+  const state = {
+    plans: [],
+    view: "ddl",
+    editingId: null,
+  };
+
+  let memoryStore = null;
+  let storageOK = true;
+  let toastTimer = null;
+
+  function uid() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return `plan-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  function readStore() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      storageOK = false;
+      return memoryStore;
+    }
+  }
+
+  function writeStore() {
+    const payload = {
+      plans: state.plans,
+      view: state.view,
+    };
+    memoryStore = payload;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      storageOK = false;
+    }
+  }
+
+  function normalizePlan(raw) {
+    if (!raw || typeof raw.content !== "string") return null;
+    const deadline = new Date(raw.deadline);
+    if (Number.isNaN(deadline.getTime())) return null;
+    if (!QUADRANT_KEYS.includes(raw.quadrant)) return null;
+    const content = raw.content.trim();
+    if (!content) return null;
+    return {
+      id: raw.id ? String(raw.id) : uid(),
+      content: content.slice(0, 120),
+      deadline: deadline.toISOString(),
+      quadrant: raw.quadrant,
+      createdAt: raw.createdAt || new Date().toISOString(),
+    };
+  }
+
+  function initData() {
+    const params = new URLSearchParams(window.location.search);
+    const wantsDemo = params.get("demo") === "1";
+    const stored = readStore();
+
+    if (stored && Array.isArray(stored.plans)) {
+      state.plans = stored.plans.map(normalizePlan).filter(Boolean);
+      state.view = stored.view === "matrix" ? "matrix" : "ddl";
+    }
+
+    if (wantsDemo && (!stored || !Array.isArray(stored.plans) || !stored.plans.length)) {
+      state.plans = createDemoPlans().map(normalizePlan).filter(Boolean);
+      state.view = params.get("view") === "matrix" ? "matrix" : "ddl";
+      writeStore();
+      window.setTimeout(() => {
+        showToast("示例计划已加载，可以直接体验两种视图");
+      }, 500);
+    }
+
+    const viewParam = params.get("view");
+    if (viewParam === "matrix" || viewParam === "ddl") {
+      state.view = viewParam;
+    }
+
+    if (!storageOK) {
+      window.setTimeout(() => {
+        showToast("当前浏览器无法本地保存，刷新页面后数据会丢失");
+      }, 900);
+    }
+  }
+
+  /* -------------------------------------------------------
+     Demo data
+     ------------------------------------------------------- */
+  function createDemoPlans() {
+    const now = new Date();
+    const at = (days, hours, minutes = 0) => {
+      const date = new Date(now);
+      date.setDate(date.getDate() + days);
+      date.setHours(hours, minutes, 0, 0);
+      return date.toISOString();
+    };
+    const soon = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+    return [
+      {
+        id: "demo-1",
+        content: "提交物理实验报告",
+        deadline: at(1, 22),
+        quadrant: "urgent-important",
+      },
+      {
+        id: "demo-2",
+        content: "回复导师的邮件",
+        deadline: soon.toISOString(),
+        quadrant: "urgent-not-important",
+      },
+      {
+        id: "demo-3",
+        content: "预约下周的研讨室",
+        deadline: at(2, 12),
+        quadrant: "urgent-not-important",
+      },
+      {
+        id: "demo-4",
+        content: "复习第四章：刚体转动",
+        deadline: at(5, 20),
+        quadrant: "not-urgent-important",
+      },
+      {
+        id: "demo-5",
+        content: "整理桌面和下载文件夹",
+        deadline: at(10, 18),
+        quadrant: "not-urgent-not-important",
+      },
+    ];
+  }
+
+  /* -------------------------------------------------------
+     Formatting helpers
+     ------------------------------------------------------- */
+  function pad(number) {
+    return String(number).padStart(2, "0");
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+      return map[character];
+    });
+  }
+
+  function formatDeadline(iso) {
+    const date = new Date(iso);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${
+      WEEKDAYS[date.getDay()]
+    } ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function relativeLabel(iso) {
+    const date = new Date(iso);
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayDiff = Math.round((startOfTarget - startOfToday) / 86400000);
+
+    if (date.getTime() < now.getTime()) {
+      if (dayDiff === 0) return "今天已过期";
+      return `已过期 ${Math.abs(dayDiff)} 天`;
+    }
+    if (dayDiff === 0) return "今天";
+    if (dayDiff === 1) return "明天";
+    return `${dayDiff} 天后`;
+  }
+
+  function isOverdue(iso) {
+    return new Date(iso).getTime() < Date.now();
+  }
+
+  function sortByDeadline(a, b) {
+    return new Date(a.deadline) - new Date(b.deadline);
+  }
+
+  function toLocalInputValue(iso) {
+    const date = new Date(iso);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  /* -------------------------------------------------------
+     Icons
+     ------------------------------------------------------- */
+  const icons = {
+    chevron: `
+      <svg class="plan-chevron" viewBox="0 0 20 20" aria-hidden="true">
+        <path d="m5.5 7.5 4.5 4.5 4.5-4.5" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`,
+    clock: `
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 6v4.2l2.8 1.7" fill="none" stroke="currentColor"
+          stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`,
+    pencil: `
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M4 14.6V16h1.4l8.4-8.4-1.4-1.4L4 14.6Z" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="m11.9 5.1 1.4-1.4a1.1 1.1 0 0 1 1.6 0l1.4 1.4a1.1 1.1 0 0 1 0 1.6l-1.4 1.4"
+          fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>`,
+  };
+
+  /* -------------------------------------------------------
+     Views
+     ------------------------------------------------------- */
+  function renderHome() {
+    const matrixMode = state.view === "matrix";
+    document.body.dataset.view = "home";
+    els.homeView.hidden = false;
+    els.formView.hidden = true;
+    els.ddlView.hidden = matrixMode;
+    els.matrixView.hidden = !matrixMode;
+
+    els.viewTabs.forEach((tab) => {
+      const active = tab.dataset.view === state.view;
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    });
+
+    if (matrixMode) {
+      els.eyebrow.textContent = "EISENHOWER MATRIX";
+      els.pageTitle.textContent = "四象限";
+      els.pageSubtitle.textContent = "先看急不急，再看重不重要。";
+      renderMatrix();
+    } else {
+      els.eyebrow.textContent = "DEADLINE FIRST";
+      els.pageTitle.textContent = "按截止时间";
+      els.pageSubtitle.textContent = "从最近的截止日期开始，先处理眼前的事。";
+      renderDDL();
+    }
+
+    const total = state.plans.length;
+    const overdue = state.plans.filter((plan) => isOverdue(plan.deadline)).length;
+    if (!total) {
+      els.summaryChip.textContent = "共 0 项";
+    } else if (overdue) {
+      els.summaryChip.textContent = `共 ${total} 项 · ${overdue} 项已过期`;
+    } else {
+      els.summaryChip.textContent = `共 ${total} 项`;
+    }
+  }
+
+  function renderDDL() {
+    const sorted = [...state.plans].sort(sortByDeadline);
+    els.ddlList.innerHTML = sorted.map((plan) => ddlItem(plan)).join("");
+    els.ddlEmpty.hidden = sorted.length > 0;
+  }
+
+  function ddlItem(plan) {
+    const date = new Date(plan.deadline);
+    const overdue = isOverdue(plan.deadline);
+    return `
+      <div class="ddl-item${overdue ? " is-overdue" : ""}">
+        <div class="date-rail" aria-hidden="true">
+          <span class="date-month">${date.getMonth() + 1}月</span>
+          <strong class="date-day">${date.getDate()}</strong>
+          <span class="date-weekday">${WEEKDAYS[date.getDay()]}</span>
+          <span class="date-relative">${relativeLabel(plan.deadline)}</span>
+        </div>
+        ${planCard(plan, "ddl")}
+      </div>`;
+  }
+
+  function planCard(plan, context) {
+    const overdue = isOverdue(plan.deadline);
+    return `
+      <article class="plan-card plan-card--${context}${overdue ? " is-overdue" : ""}"
+        data-id="${escapeHtml(plan.id)}">
+        <button class="plan-content" type="button" data-action="toggle"
+          aria-expanded="false" aria-label="查看或收起：${escapeHtml(plan.content)}">
+          <span class="plan-text">${escapeHtml(plan.content)}</span>
+          ${icons.chevron}
+        </button>
+        <div class="plan-deadline">
+          ${icons.clock}
+          <span>${formatDeadline(plan.deadline)}</span>
+          ${overdue ? '<span class="overdue-badge">已过期</span>' : ""}
+        </div>
+        <div class="plan-expand">
+          <button class="edit-button" type="button" data-action="edit"
+            data-id="${escapeHtml(plan.id)}">
+            ${icons.pencil}
+            <span>编辑</span>
+          </button>
+        </div>
+      </article>`;
+  }
+
+  function renderMatrix() {
+    const lists = {};
+    $$("[data-list]").forEach((list) => {
+      lists[list.dataset.list] = list;
+    });
+
+    QUADRANT_KEYS.forEach((key) => {
+      const list = lists[key];
+      if (!list) return;
+      const plans = state.plans
+        .filter((plan) => plan.quadrant === key)
+        .sort(sortByDeadline);
+      list.innerHTML = plans.map((plan) => planCard(plan, "matrix")).join("");
+
+      const panel = list.closest(".quadrant");
+      const count = $("[data-count]", panel);
+      const empty = $(".quadrant-empty", panel);
+      if (count) count.textContent = String(plans.length);
+      if (empty) empty.hidden = plans.length > 0;
+    });
+
+    els.matrixEmpty.hidden = state.plans.length > 0;
+  }
+
+  function setView(view) {
+    if (view !== "ddl" && view !== "matrix") return;
+    state.view = view;
+    writeStore();
+    if (document.body.dataset.view === "form") {
+      window.location.hash = "#/";
+      return;
+    }
+    renderHome();
+  }
+
+  function clearErrors() {
+    [
+      [els.contentField, els.contentError],
+      [els.deadlineField, els.deadlineError],
+    ].forEach(([field, error]) => {
+      field.classList.remove("has-error");
+      error.textContent = "";
+    });
+    els.quadrantField.classList.remove("has-error");
+    els.quadrantError.textContent = "";
+  }
+
+  function setError(field, errorElement, message) {
+    field.classList.add("has-error");
+    errorElement.textContent = message;
+  }
+
+  function renderForm(plan) {
+    state.editingId = plan ? plan.id : null;
+    els.form.reset();
+    clearErrors();
+
+    els.contentInput.value = plan ? plan.content : "";
+    els.deadlineInput.value = plan ? toLocalInputValue(plan.deadline) : "";
+    if (plan) {
+      const radio = els.form.querySelector(
+        `input[name="quadrant"][value="${plan.quadrant}"]`
+      );
+      if (radio) radio.checked = true;
+    }
+
+    els.charCount.textContent = `${els.contentInput.value.length} / 120`;
+    els.formEyebrow.textContent = plan ? "EDIT PLAN" : "NEW PLAN";
+    els.formTitle.textContent = plan ? "编辑计划" : "添加计划";
+    els.formSubtitle.textContent = plan
+      ? "修改内容、截止时间或优先级。"
+      : "把要做的事，放进合适的位置。";
+    els.submitButton.textContent = plan ? "保存修改" : "完成";
+    els.deleteButton.hidden = !plan;
+
+    document.body.dataset.view = "form";
+    els.homeView.hidden = true;
+    els.formView.hidden = false;
+
+    window.requestAnimationFrame(() => {
+      els.contentInput.focus();
+      const length = els.contentInput.value.length;
+      els.contentInput.setSelectionRange(length, length);
+    });
+  }
+
+  function validateForm() {
+    clearErrors();
+    let valid = true;
+    let focusTarget = null;
+
+    const content = els.contentInput.value.trim();
+    if (!content) {
+      setError(els.contentField, els.contentError, "请输入计划内容");
+      focusTarget = focusTarget || els.contentInput;
+      valid = false;
+    } else if (content.length > 120) {
+      setError(els.contentField, els.contentError, "计划内容请控制在 120 字以内");
+      focusTarget = focusTarget || els.contentInput;
+      valid = false;
+    }
+
+    const rawDeadline = els.deadlineInput.value;
+    const deadline = rawDeadline ? new Date(rawDeadline) : null;
+    if (!rawDeadline || !deadline || Number.isNaN(deadline.getTime())) {
+      setError(els.deadlineField, els.deadlineError, "请选择截止时间");
+      focusTarget = focusTarget || els.deadlineInput;
+      valid = false;
+    }
+
+    const quadrant = els.form.querySelector(
+      'input[name="quadrant"]:checked'
+    );
+    if (!quadrant) {
+      els.quadrantField.classList.add("has-error");
+      els.quadrantError.textContent = "请选择紧急 / 重要程度";
+      focusTarget =
+        focusTarget ||
+        els.form.querySelector('input[name="quadrant"]');
+      valid = false;
+    }
+
+    if (!valid) {
+      if (focusTarget) focusTarget.focus();
+      return null;
+    }
+
+    return {
+      content,
+      deadline: deadline.toISOString(),
+      quadrant: quadrant.value,
+    };
+  }
+
+  function savePlan(event) {
+    event.preventDefault();
+    const data = validateForm();
+    if (!data) return;
+
+    if (state.editingId) {
+      const plan = state.plans.find((item) => item.id === state.editingId);
+      if (plan) {
+        Object.assign(plan, data);
+        showToast("计划已更新");
+      }
+    } else {
+      state.plans.push({
+        id: uid(),
+        ...data,
+        createdAt: new Date().toISOString(),
+      });
+      showToast("计划已添加");
+    }
+
+    writeStore();
+    state.editingId = null;
+    window.location.hash = "#/";
+  }
+
+  function deletePlan() {
+    if (!state.editingId) return;
+    const plan = state.plans.find((item) => item.id === state.editingId);
+    if (!plan) return;
+    if (!window.confirm(`确定删除“${plan.content}”吗？此操作无法撤销。`)) return;
+
+    state.plans = state.plans.filter((item) => item.id !== state.editingId);
+    writeStore();
+    state.editingId = null;
+    showToast("计划已删除");
+    window.location.hash = "#/";
+  }
+
+  /* -------------------------------------------------------
+     Toast
+     ------------------------------------------------------- */
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    els.toast.textContent = message;
+    els.toast.classList.add("is-visible");
+    toastTimer = window.setTimeout(() => {
+      els.toast.classList.remove("is-visible");
+    }, 2400);
+  }
+
+  /* -------------------------------------------------------
+     Routing
+     ------------------------------------------------------- */
+  function getRoute() {
+    const raw = window.location.hash.replace(/^#\/?/, "");
+    if (raw === "add") return { name: "form", id: null };
+    if (raw.startsWith("edit/")) {
+      return { name: "form", id: decodeURIComponent(raw.slice(5)) };
+    }
+    return { name: "home" };
+  }
+
+  function handleRoute() {
+    const route = getRoute();
+
+    if (route.name === "form") {
+      const plan = route.id
+        ? state.plans.find((item) => item.id === route.id)
+        : null;
+      if (route.id && !plan) {
+        showToast("这个计划不存在，可能已被删除");
+        window.location.hash = "#/";
+        return;
+      }
+      renderForm(plan);
+    } else {
+      renderHome();
+    }
+
+    window.scrollTo(0, 0);
+  }
+
+  /* -------------------------------------------------------
+     Events
+     ------------------------------------------------------- */
+  function bindEvents() {
+    els.addButton.addEventListener("click", () => {
+      window.location.hash = "#/add";
+    });
+
+    els.viewSwitch.addEventListener("click", (event) => {
+      const tab = event.target.closest("[data-view]");
+      if (!tab) return;
+      setView(tab.dataset.view);
+    });
+
+    els.viewSwitch.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const current = document.activeElement.closest("[data-view]");
+      if (!current) return;
+      const index = els.viewTabs.indexOf(current);
+      const nextIndex =
+        event.key === "ArrowRight"
+          ? (index + 1) % els.viewTabs.length
+          : (index - 1 + els.viewTabs.length) % els.viewTabs.length;
+      els.viewTabs[nextIndex].focus();
+      setView(els.viewTabs[nextIndex].dataset.view);
+    });
+
+    document.addEventListener("click", (event) => {
+      const addTrigger = event.target.closest('[data-action="add"]');
+      if (addTrigger) {
+        event.preventDefault();
+        window.location.hash = "#/add";
+        return;
+      }
+
+      const toggle = event.target.closest('[data-action="toggle"]');
+      if (toggle) {
+        const card = toggle.closest(".plan-card");
+        const expanded = card.classList.toggle("is-expanded");
+        toggle.setAttribute("aria-expanded", String(expanded));
+        return;
+      }
+
+      const edit = event.target.closest('[data-action="edit"]');
+      if (edit) {
+        event.preventDefault();
+        window.location.hash = `#/edit/${encodeURIComponent(edit.dataset.id)}`;
+      }
+    });
+
+    els.form.addEventListener("submit", savePlan);
+    els.deleteButton.addEventListener("click", deletePlan);
+
+    els.contentInput.addEventListener("input", () => {
+      els.charCount.textContent = `${els.contentInput.value.length} / 120`;
+      if (els.contentInput.value.trim()) {
+        els.contentField.classList.remove("has-error");
+        els.contentError.textContent = "";
+      }
+    });
+
+    els.deadlineInput.addEventListener("input", () => {
+      if (els.deadlineInput.value) {
+        els.deadlineField.classList.remove("has-error");
+        els.deadlineError.textContent = "";
+      }
+    });
+
+    els.quadrantField.addEventListener("change", () => {
+      els.quadrantField.classList.remove("has-error");
+      els.quadrantError.textContent = "";
+    });
+
+    els.form.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        els.form.requestSubmit();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.dataset.view === "form") {
+        window.location.hash = "#/";
+      }
+    });
+
+    window.addEventListener("hashchange", handleRoute);
+  }
+
+  /* -------------------------------------------------------
+     Start
+     ------------------------------------------------------- */
+  initData();
+  bindEvents();
+  handleRoute();
+})();
+
+</script>
+</body>
+</html>
